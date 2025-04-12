@@ -410,14 +410,20 @@ if __name__ == '__main__':
     if args.restore_ckpt is not None:
         assert args.restore_ckpt.endswith(".pth")
         logging.info("Loading checkpoint...")
-        checkpoint = torch.load(args.restore_ckpt, map_location='cuda')
+        if torch.backends.mps.is_available():
+            checkpoint = torch.load(args.restore_ckpt, map_location='mps')
+        else:
+            checkpoint = torch.load(args.restore_ckpt, map_location='cuda')
         if 'model' in checkpoint:
             model.load_state_dict(checkpoint['model'])
         else:
             model.load_state_dict(checkpoint)
         logging.info(f"Done loading checkpoint")
 
-    model.cuda()
+    if torch.backends.mps.is_available():
+        model.to('mps')
+    else:
+        model.cuda()
     model.eval()
 
     print(f"The model has {format(count_parameters(model)[1]/1e6, '.2f')}M learnable parameters.")

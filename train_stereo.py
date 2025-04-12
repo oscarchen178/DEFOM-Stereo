@@ -44,22 +44,29 @@ def train(args):
 
     if args.launcher == 'none':
         args.distributed = False
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        if torch.backends.mps.is_available():
+            device = torch.device("mps")
+        elif torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
     else:
         args.distributed = True
-
-        # adjust batch size for each gpu
-        assert args.batch_size % torch.cuda.device_count() == 0
-        args.batch_size = args.batch_size // torch.cuda.device_count()
-
-        dist_params = dict(backend='nccl')
-        init_dist(args.launcher, **dist_params)
-        # re-set gpu_ids with distributed training mode
-        _, world_size = get_dist_info()
-        args.gpu_ids = range(world_size)
-        device = torch.device('cuda:{}'.format(args.local_rank))
-
-        setup_for_distributed(args.local_rank == 0)
+        if torch.backends.mps.is_available():
+            device = torch.device("mps")
+            # MPS doesn't support distributed training, so we'll use a single device
+            args.batch_size = args.batch_size
+        else:
+            # adjust batch size for each gpu
+            assert args.batch_size % torch.cuda.device_count() == 0
+            args.batch_size = args.batch_size // torch.cuda.device_count()
+            dist_params = dict(backend='nccl')
+            init_dist(args.launcher, **dist_params)
+            # re-set gpu_ids with distributed training mode
+            _, world_size = get_dist_info()
+            args.gpu_ids = range(world_size)
+            device = torch.device('cuda:{}'.format(args.local_rank))
+            setup_for_distributed(args.local_rank == 0)
 
     model = DEFOMStereo(args).to(device)
     print("Parameter Count: %d, Trainable: %d" % count_parameters(model))

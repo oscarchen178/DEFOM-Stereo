@@ -13,7 +13,13 @@ from PIL import Image
 from matplotlib import pyplot as plt
 
 
-DEVICE = 'cuda'
+# Set device based on available hardware
+if torch.backends.mps.is_available():
+    DEVICE = torch.device("mps")
+elif torch.cuda.is_available():
+    DEVICE = torch.device("cuda")
+else:
+    DEVICE = torch.device("cpu")
 
 def load_image(imfile):
     img = np.array(Image.open(imfile)).astype(np.uint8)
