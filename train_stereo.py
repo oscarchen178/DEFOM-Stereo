@@ -147,10 +147,10 @@ def train(args):
 
         for i_batch, data_blob in enumerate(tqdm(train_loader, initial=epoch_start_step)):
             optimizer.zero_grad()
-            image1 = data_blob["img1"].cuda()
-            image2 = data_blob["img2"].cuda()
-            disp_gt = data_blob["disp"].cuda()
-            valid = data_blob["valid"].cuda()
+            image1 = data_blob["img1"].to(device)
+            image2 = data_blob["img2"].to(device)
+            disp_gt = data_blob["disp"].to(device)
+            valid = data_blob["valid"].to(device)
 
             assert model.training
             disp_predictions = model(image1, image2, iters=args.train_iters, scale_iters=args.scale_iters)
