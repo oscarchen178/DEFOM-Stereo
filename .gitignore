@@ -1,2 +1,6 @@
 
 /datasets
+.DS_Store
+/checkpoints
+*.pyc
+*.0
